@@ -1,79 +1,236 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class TutorialChoclero : MonoBehaviour
 {
     public int estado = 1;
+
+    [Header("Carteles")]
     public GameObject cartelGritarChoclos;
     public GameObject cartelClienteChoclo;
-    public Transform clienteChoclo;
+    public GameObject cartelHervir;
+    public GameObject cartelSacarChoclo;
+    public GameObject cartelPasarSal;
+    public GameObject cartelChocloSalado;
+    public GameObject cartelChocloConManteca;
+    public GameObject cartelBandeja;
+    public GameObject cartelChocloListo;
+    public GameObject chocloEnBandeja;
+    public GameObject chocloSacado;
+    public GameObject chocloConManteca;
+    public GameObject monedasGanadas;
+
+    [Header("Referencias")]
     public Transform puntoCarrito;
     public float velocidadCliente = 2f;
+    public BarraCocinaChoclo barraCocina;
+
+    [Header("Clientes múltiples")]
+    public Transform[] clientes;
+    private int clienteActual = 0;
+
+    private bool chocloListo = false;
 
     void Start()
     {
-
-        if (clienteChoclo == null)
-            clienteChoclo = GameObject.Find("ClienteChurro").transform;
-
         if (puntoCarrito == null)
-            puntoCarrito = GameObject.Find("PuntoCarritoChurro").transform;
+            puntoCarrito = GameObject.Find("PuntoCarritoChoclo").transform;
 
         cartelGritarChoclos.SetActive(true);
         cartelClienteChoclo.SetActive(false);
+        cartelHervir.SetActive(false);
+        cartelSacarChoclo.SetActive(false);
+        cartelPasarSal.SetActive(false);
+        cartelChocloSalado.SetActive(false);
+        cartelChocloConManteca.SetActive(false);
+        cartelBandeja.SetActive(false);
+        cartelChocloListo.SetActive(false);
+        monedasGanadas.SetActive(false);
+        chocloConManteca.SetActive(false);
+        chocloSacado.SetActive(false);
+        chocloEnBandeja.SetActive(false);
+
+        foreach (Transform c in clientes) if (c != null) c.gameObject.SetActive(false);
     }
 
     void Update()
     {
-        if (estado == 1 && Input.GetKeyDown(KeyCode.G))
+        switch (estado)
         {
-            Debug.Log("Gritó choclos - pasamos al estado 2");
+            case 1:
+                if (Input.GetKeyDown(KeyCode.C))
+                {
+                    cartelGritarChoclos.SetActive(false);
+                    StartCoroutine(MoverCliente());
+                    estado = 2;
+                }
+                break;
 
-            if (cartelGritarChoclos != null)
-                cartelGritarChoclos.SetActive(false);
+            case 3:
+                if (Input.GetKeyDown(KeyCode.A))
+                {
+                    cartelHervir.SetActive(false);
+                    cartelClienteChoclo.SetActive(true);
 
-            StartCoroutine(MoverCliente());
-            estado = 2;
+                    if (barraCocina != null)
+                        barraCocina.EmpezarCocina();
+
+                    StartCoroutine(EsperarCoccion());
+                    estado = 4;
+                }
+                break;
+
+            case 5:
+                if (Input.GetKeyDown(KeyCode.S))
+                {
+                    chocloListo = false;
+                    cartelChocloListo.SetActive(false);
+                    cartelSacarChoclo.SetActive(false);
+                    chocloSacado.SetActive(true);
+                    cartelPasarSal.SetActive(true);
+                    estado = 6;
+                }
+                break;
+
+            case 6:
+                if (Input.GetKeyDown(KeyCode.B))
+                {
+                    chocloSacado.SetActive(false);
+                    cartelPasarSal.SetActive(false);
+                    cartelChocloSalado.SetActive(true);
+                    cartelChocloConManteca.SetActive(true);
+                    estado = 7;
+
+                    if (clienteActual + 1 < clientes.Length)
+                        StartCoroutine(PrepararSiguienteCliente());
+                }
+                break;
+
+            case 7:
+                if (Input.GetKeyDown(KeyCode.L))
+                {
+                    cartelChocloConManteca.SetActive(false);
+                    cartelChocloSalado.SetActive(false);
+                    chocloConManteca.SetActive(true);
+                    cartelBandeja.SetActive(true);
+                    estado = 8;
+                }
+                break;
+
+            case 8:
+                if (Input.GetKeyDown(KeyCode.K))
+                {
+                    cartelBandeja.SetActive(false);
+                    chocloConManteca.SetActive(false);
+                    chocloEnBandeja.SetActive(true);
+                    monedasGanadas.SetActive(true);
+                    cartelClienteChoclo.SetActive(false);
+                    estado = 9;
+                    StartCoroutine(SalirCliente());
+                }
+                break;
         }
     }
 
     IEnumerator MoverCliente()
     {
-        if (clienteChoclo == null || puntoCarrito == null)
-        {
-            Debug.LogError("Cliente o punto de carrito no encontrados");
-            yield break;
-        }
+        if (clientes.Length == 0) yield break;
 
-        // Hacer kinematic si tiene Rigidbody2D
-        Rigidbody2D rb = clienteChoclo.GetComponent<Rigidbody2D>();
+        Transform cliente = clientes[clienteActual];
+        cliente.gameObject.SetActive(true);
+
+        Rigidbody2D rb = cliente.GetComponent<Rigidbody2D>();
         if (rb != null) rb.isKinematic = true;
 
-        clienteChoclo.gameObject.SetActive(true);
+        Vector3 targetPos = puntoCarrito.position;
+        float escalaInicial = 15f;
+        float escalaFinal = 15f;
+        cliente.localScale = Vector3.one * escalaInicial;
 
-        // Mantener Z = 0 para que se vea
-        Vector3 targetPos = new Vector3(puntoCarrito.position.x, puntoCarrito.position.y, 0f);
-        clienteChoclo.position = new Vector3(clienteChoclo.position.x, clienteChoclo.position.y, 0f);
+        float tiempo = 0f;
+        float duracion = 4f;
+        Vector3 inicio = cliente.position;
 
-        Debug.Log("Cliente empieza a moverse hacia el carrito");
-
-        while (Vector3.Distance(clienteChoclo.position, targetPos) > 0.05f)
+        while (tiempo < duracion)
         {
-            clienteChoclo.position = Vector3.MoveTowards(
-                clienteChoclo.position,
-                targetPos,
-                velocidadCliente * Time.deltaTime
-            );
+            cliente.position = Vector3.Lerp(inicio, targetPos, tiempo / duracion);
+            cliente.localScale = Vector3.Lerp(Vector3.one * escalaInicial, Vector3.one * escalaFinal, tiempo / duracion);
+            tiempo += Time.deltaTime;
             yield return null;
         }
 
-        Debug.Log("Cliente llegó al carrito");
+        cliente.position = targetPos;
+        cliente.localScale = Vector3.one * escalaFinal;
 
-        if (cartelClienteChoclo != null)
-            cartelClienteChoclo.SetActive(true);
+        cartelClienteChoclo.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        cartelHervir.SetActive(true);
 
-        // Restaurar Rigidbody2D si existía
+        estado = 3;
+
         if (rb != null) rb.isKinematic = false;
+    }
+
+    IEnumerator EsperarCoccion()
+    {
+        yield return new WaitForSeconds(barraCocina.tiempoCoccion + 0.5f);
+        chocloListo = true;
+        cartelSacarChoclo.SetActive(true);
+        cartelChocloListo.SetActive(true);
+        estado = 5;
+    }
+
+    IEnumerator SalirCliente()
+    {
+        Transform cliente = clientes[clienteActual];
+        Vector3 salida = cliente.position + new Vector3(5f, 0, 0);
+        float velocidadSalida = 2f;
+
+        while (Vector3.Distance(cliente.position, salida) > 0.05f)
+        {
+            cliente.position = Vector3.MoveTowards(cliente.position, salida, velocidadSalida * Time.deltaTime);
+            yield return null;
+        }
+
+        cliente.gameObject.SetActive(false);
+ chocloEnBandeja.SetActive(false);
+                    monedasGanadas.SetActive(false);
+        clienteActual++;
+        if (clienteActual < clientes.Length)
+        {
+            yield return new WaitForSeconds(1.5f);
+               chocloEnBandeja.SetActive(false);
+                    monedasGanadas.SetActive(false);
+            StartCoroutine(MoverCliente());
+        }
+    }
+
+    IEnumerator PrepararSiguienteCliente()
+    {
+        yield return new WaitForSeconds(1.5f);
+        Transform proximo = clientes[clienteActual + 1];
+        if (proximo == null) yield break;
+
+        proximo.gameObject.SetActive(true);
+        Vector3 inicio = puntoCarrito.position + new Vector3(6f, 0, 0);
+        proximo.position = inicio;
+        float escalaInicial = 15f;
+        float escalaFinal = 15f;
+        proximo.localScale = Vector3.one * escalaInicial;
+
+        Vector3 destino = puntoCarrito.position + new Vector3(1.5f, 0, 0);
+
+        float tiempo = 0f;
+        float duracion = 4f;
+        while (tiempo < duracion)
+        {
+            proximo.position = Vector3.Lerp(inicio, destino, tiempo / duracion);
+            
+            tiempo += Time.deltaTime;
+            yield return null;
+        }
+
+        proximo.position = destino;
+        proximo.localScale = Vector3.one * escalaFinal;
     }
 }
