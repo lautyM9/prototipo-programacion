@@ -19,6 +19,10 @@ public class TutorialChurrero : MonoBehaviour
     public GameObject churroConDulceDeLeche;
     public GameObject churroEnBolsa;
     public GameObject monedasGanadas;
+    public GameObject cartelAzucarNo;
+    public GameObject azucarCancelado;
+    public GameObject cartelBañarChocolate;
+    public GameObject churroBañado;
 
     [Header("Referencias")]
     public Transform puntoCarrito;
@@ -28,7 +32,6 @@ public class TutorialChurrero : MonoBehaviour
     [Header("Clientes múltiples")]
     public Transform[] clientes;
     private int clienteActual = 0;
-
     private bool churroListo = false;
 
     void Start()
@@ -46,6 +49,10 @@ public class TutorialChurrero : MonoBehaviour
         churroEnBolsa.SetActive(false);
         churroConDulceDeLeche.SetActive(false);
         churroSacado.SetActive(false);
+        cartelAzucarNo.SetActive(false);
+        azucarCancelado.SetActive(false);
+        cartelBañarChocolate.SetActive(false);
+        churroBañado.SetActive(false);
 
         foreach (Transform c in clientes) if (c != null) c.gameObject.SetActive(false);
     }
@@ -90,7 +97,16 @@ public class TutorialChurrero : MonoBehaviour
                 break;
 
             case 6:
-                if (Input.GetKeyDown(KeyCode.B))
+                if (clienteActual == 1)
+                {
+                    cartelPasarAzucar.SetActive(false);
+                    churroSacado.SetActive(false);
+                    cartelAzucarNo.SetActive(true);
+                    azucarCancelado.SetActive(true);
+                    cartelChurroDulceDeLeche.SetActive(true);
+                    estado = 11;
+                }
+                else if (Input.GetKeyDown(KeyCode.B))
                 {
                     cartelPasarAzucar.SetActive(false);
                     churroSacado.SetActive(false);
@@ -119,6 +135,42 @@ public class TutorialChurrero : MonoBehaviour
                 {
                     cartelBolsa.SetActive(false);
                     churroConDulceDeLeche.SetActive(false);
+                    churroEnBolsa.SetActive(true);
+                    monedasGanadas.SetActive(true);
+                    cartelClienteChurro.SetActive(false);
+                    estado = 9;
+                    StartCoroutine(SalirCliente());
+                }
+                break;
+
+            case 11:
+                if (Input.GetKeyDown(KeyCode.L))
+                {
+                    cartelChurroDulceDeLeche.SetActive(false);
+                    cartelAzucarNo.SetActive(false);
+                    azucarCancelado.SetActive(false);
+                    churroConDulceDeLeche.SetActive(true);
+                    cartelBañarChocolate.SetActive(true);
+                    estado = 12;
+                }
+                break;
+
+            case 12:
+                if (Input.GetKeyDown(KeyCode.J))
+                {
+                    cartelBañarChocolate.SetActive(false);
+                    churroConDulceDeLeche.SetActive(false);
+                    churroBañado.SetActive(true);
+                    cartelBolsa.SetActive(true);
+                    estado = 13;
+                }
+                break;
+
+            case 13:
+                if (Input.GetKeyDown(KeyCode.K))
+                {
+                    cartelBolsa.SetActive(false);
+                    churroBañado.SetActive(false);
                     churroEnBolsa.SetActive(true);
                     monedasGanadas.SetActive(true);
                     cartelClienteChurro.SetActive(false);
@@ -190,14 +242,13 @@ public class TutorialChurrero : MonoBehaviour
         }
 
         cliente.gameObject.SetActive(false);
-            churroEnBolsa.SetActive(false);
-                    monedasGanadas.SetActive(false);
+        churroEnBolsa.SetActive(false);
+        monedasGanadas.SetActive(false);
 
         clienteActual++;
         if (clienteActual < clientes.Length)
         {
             yield return new WaitForSeconds(1.5f);
-          
             StartCoroutine(MoverCliente());
         }
     }
@@ -222,7 +273,6 @@ public class TutorialChurrero : MonoBehaviour
         while (tiempo < duracion)
         {
             proximo.position = Vector3.Lerp(inicio, destino, tiempo / duracion);
-           
             tiempo += Time.deltaTime;
             yield return null;
         }

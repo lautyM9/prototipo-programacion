@@ -19,6 +19,10 @@ public class TutorialChoclero : MonoBehaviour
     public GameObject chocloSacado;
     public GameObject chocloConManteca;
     public GameObject monedasGanadas;
+    public GameObject cartelPasarAderezo;
+    public GameObject chocloConAderezo;
+    public GameObject salCancelada;
+    public GameObject cartelSalNo;
 
     [Header("Referencias")]
     public Transform puntoCarrito;
@@ -28,6 +32,9 @@ public class TutorialChoclero : MonoBehaviour
     [Header("Clientes múltiples")]
     public Transform[] clientes;
     private int clienteActual = 0;
+    private GameObject cartelPasarActual;
+private GameObject cartelIngredienteActual;
+private GameObject objetoIngredienteActual;
 
     private bool chocloListo = false;
 
@@ -53,84 +60,121 @@ public class TutorialChoclero : MonoBehaviour
         foreach (Transform c in clientes) if (c != null) c.gameObject.SetActive(false);
     }
 
-    void Update()
+   void Update()
+{
+    switch (estado)
     {
-        switch (estado)
-        {
-            case 1:
-                if (Input.GetKeyDown(KeyCode.C))
+        case 1:
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                cartelGritarChoclos.SetActive(false);
+                StartCoroutine(MoverCliente());
+                estado = 2;
+            }
+            break;
+
+        case 3:
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                cartelHervir.SetActive(false);
+                cartelClienteChoclo.SetActive(true);
+
+                if (barraCocina != null)
+                    barraCocina.EmpezarCocina();
+
+                StartCoroutine(EsperarCoccion());
+                estado = 4;
+            }
+            break;
+
+        case 5:
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                chocloListo = false;
+                cartelChocloListo.SetActive(false);
+                cartelSacarChoclo.SetActive(false);
+                chocloSacado.SetActive(true);
+
+                if (clienteActual == 1)
                 {
-                    cartelGritarChoclos.SetActive(false);
-                    StartCoroutine(MoverCliente());
-                    estado = 2;
+                    cartelSalNo.SetActive(true);
+                    salCancelada.SetActive(true);
+                    cartelChocloConManteca.SetActive(true);
+                    estado = 10;
                 }
-                break;
-
-            case 3:
-                if (Input.GetKeyDown(KeyCode.A))
+                else
                 {
-                    cartelHervir.SetActive(false);
-                    cartelClienteChoclo.SetActive(true);
-
-                    if (barraCocina != null)
-                        barraCocina.EmpezarCocina();
-
-                    StartCoroutine(EsperarCoccion());
-                    estado = 4;
-                }
-                break;
-
-            case 5:
-                if (Input.GetKeyDown(KeyCode.S))
-                {
-                    chocloListo = false;
-                    cartelChocloListo.SetActive(false);
-                    cartelSacarChoclo.SetActive(false);
-                    chocloSacado.SetActive(true);
                     cartelPasarSal.SetActive(true);
                     estado = 6;
                 }
-                break;
+            }
+            break;
 
-            case 6:
-                if (Input.GetKeyDown(KeyCode.B))
-                {
-                    chocloSacado.SetActive(false);
-                    cartelPasarSal.SetActive(false);
-                    cartelChocloSalado.SetActive(true);
-                    cartelChocloConManteca.SetActive(true);
-                    estado = 7;
+        case 6:
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                chocloSacado.SetActive(false);
+                cartelPasarSal.SetActive(false);
+                cartelChocloSalado.SetActive(true);
+                cartelChocloConManteca.SetActive(true);
+                estado = 7;
 
-                    if (clienteActual + 1 < clientes.Length)
-                        StartCoroutine(PrepararSiguienteCliente());
-                }
-                break;
+                if (clienteActual + 1 < clientes.Length)
+                    StartCoroutine(PrepararSiguienteCliente());
+            }
+            break;
 
-            case 7:
-                if (Input.GetKeyDown(KeyCode.L))
-                {
-                    cartelChocloConManteca.SetActive(false);
-                    cartelChocloSalado.SetActive(false);
-                    chocloConManteca.SetActive(true);
-                    cartelBandeja.SetActive(true);
-                    estado = 8;
-                }
-                break;
+        case 7:
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                cartelChocloConManteca.SetActive(false);
+                cartelChocloSalado.SetActive(false);
+                chocloConManteca.SetActive(true);
+                cartelBandeja.SetActive(true);
+                estado = 8;
+            }
+            break;
 
-            case 8:
-                if (Input.GetKeyDown(KeyCode.K))
-                {
-                    cartelBandeja.SetActive(false);
+        case 8:
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                cartelBandeja.SetActive(false);
                     chocloConManteca.SetActive(false);
+                chocloSacado.SetActive(false);
                     chocloEnBandeja.SetActive(true);
-                    monedasGanadas.SetActive(true);
-                    cartelClienteChoclo.SetActive(false);
-                    estado = 9;
-                    StartCoroutine(SalirCliente());
-                }
-                break;
-        }
+                chocloConAderezo.SetActive(true);
+                monedasGanadas.SetActive(true);
+                cartelClienteChoclo.SetActive(false);
+                estado = 9;
+                StartCoroutine(SalirCliente());
+            }
+            break;
+
+        case 10:
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                cartelChocloConManteca.SetActive(false);
+                salCancelada.SetActive(false);
+                cartelSalNo.SetActive(false);
+                chocloConManteca.SetActive(true);
+                cartelPasarAderezo.SetActive(true);
+                estado = 11;
+            }
+            break;
+
+        case 11:
+            if (Input.GetKeyDown(KeyCode.V))
+            {
+                cartelPasarAderezo.SetActive(false);
+                    chocloConManteca.SetActive(false);
+                
+                chocloConAderezo.SetActive(true);
+                cartelBandeja.SetActive(true);
+                estado = 8;
+            }
+            break;
     }
+}
 
     IEnumerator MoverCliente()
     {
