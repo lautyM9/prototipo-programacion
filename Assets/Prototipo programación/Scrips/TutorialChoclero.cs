@@ -142,7 +142,7 @@ private GameObject objetoIngredienteActual;
                     chocloConManteca.SetActive(false);
                 chocloSacado.SetActive(false);
                     chocloEnBandeja.SetActive(true);
-                chocloConAderezo.SetActive(true);
+                chocloConAderezo.SetActive(false);
                 monedasGanadas.SetActive(true);
                 cartelClienteChoclo.SetActive(false);
                 estado = 9;
