@@ -187,8 +187,8 @@ private GameObject objetoIngredienteActual;
         if (rb != null) rb.isKinematic = true;
 
         Vector3 targetPos = puntoCarrito.position;
-        float escalaInicial = 15f;
-        float escalaFinal = 15f;
+        float escalaInicial = 0.3f;
+        float escalaFinal = 0.3f;
         cliente.localScale = Vector3.one * escalaInicial;
 
         float tiempo = 0f;
@@ -251,21 +251,21 @@ private GameObject objetoIngredienteActual;
 
     IEnumerator PrepararSiguienteCliente()
     {
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1f);
         Transform proximo = clientes[clienteActual + 1];
         if (proximo == null) yield break;
 
         proximo.gameObject.SetActive(true);
         Vector3 inicio = puntoCarrito.position + new Vector3(6f, 0, 0);
         proximo.position = inicio;
-        float escalaInicial = 15f;
-        float escalaFinal = 15f;
+        float escalaInicial = 0.3f;
+        float escalaFinal = 0.3f;
         proximo.localScale = Vector3.one * escalaInicial;
 
         Vector3 destino = puntoCarrito.position + new Vector3(1.5f, 0, 0);
 
         float tiempo = 0f;
-        float duracion = 4f;
+        float duracion = 2f;
         while (tiempo < duracion)
         {
             proximo.position = Vector3.Lerp(inicio, destino, tiempo / duracion);
